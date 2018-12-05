@@ -8,7 +8,7 @@ const users = (state = [], action) => {
         id: action.id
       });
     case types.USERS_LIST:
-      return action.user;
+      return action.users;
     default:
       return state;
   }

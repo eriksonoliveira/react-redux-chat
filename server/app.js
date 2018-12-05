@@ -1,8 +1,10 @@
-const Websocket = require("ws");
+const WebSocket = require("ws");
 
-const wss = new Websocket.Server({ port: 8989 });
+// Initialise wss as a new Websocket Server running in port 8989
+const wss = new WebSocket.Server({ port: 8989 });
 
-const users = [];
+// Array of users currently logged in. Serves as the Database.
+let users = [];
 
 const broadcast = (data, ws) => {
   wss.clients.forEach(client => {
@@ -13,13 +15,14 @@ const broadcast = (data, ws) => {
 };
 
 wss.on("connection", ws => {
-  let index;
+  // Random number
+  const userId = Math.floor(Math.random() * 10 * 10);
+
   ws.on("message", message => {
     const data = JSON.parse(message);
     switch (data.type) {
       case "ADD_USER": {
-        index = users.length;
-        users.push({ name: data.name, id: index + 1 });
+        users.push({ name: data.name, id: userId });
         ws.send(
           JSON.stringify({
             type: "USERS_LIST",
@@ -51,8 +54,13 @@ wss.on("connection", ws => {
     }
   });
 
+  // When the connection is closed, remove the user with userId
   ws.on("close", () => {
-    users.splice(index, 1);
+    users = users.filter(user => {
+      return user.id !== userId;
+    });
+
+    // Send updated user list to all the connected users
     broadcast(
       {
         type: "USERS_LIST",
